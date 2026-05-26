@@ -1,5 +1,6 @@
 # Architecture_Diagram.png
-# 
+# <img width="1376" height="768" alt="architecture-diagram" src="https://github.com/user-attachments/assets/70bde7d5-30d3-4d27-a3e2-33ea626298e3" />
+
 **Client interfaces** — the web portal, mobile app, patient self-service portal, and third-party integrations (labs, payers, HIE) all funnel requests downward through a single secure entry point.
 
 **API gateway & security perimeter** — every inbound request passes through authentication (OAuth 2, MFA, RBAC), rate limiting, TLS-terminating routing, and immutable audit logging before touching any business logic.
