@@ -1,6 +1,6 @@
 # VAULT EHR SYSTEM ARCHITECTURAL DIAGRAM 
 # <img width="1376" height="768" alt="architecture-diagram" src="https://github.com/user-attachments/assets/70bde7d5-30d3-4d27-a3e2-33ea626298e3" />
-This is the **Vault EHR infrastructure architecture** showing how the system is deployed across three distinct zones. Here's a breakdown of each:
+
 
 **Internet Zone (top)**
 External users and patients send HTTPS traffic through the public internet cloud. From there, traffic splits into two paths — DDoS protection/filtering and load distribution — before entering AWS.
