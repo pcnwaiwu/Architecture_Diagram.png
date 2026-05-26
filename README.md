@@ -1,15 +1,39 @@
-# Architecture_Diagram.png
+# VAULT EHR SYSTEM ARCHITECTURAL DIAGRAM 
 # <img width="1376" height="768" alt="architecture-diagram" src="https://github.com/user-attachments/assets/70bde7d5-30d3-4d27-a3e2-33ea626298e3" />
+This is the **Vault EHR infrastructure architecture** showing how the system is deployed across three distinct zones. Here's a breakdown of each:
 
-**Client interfaces** — the web portal, mobile app, patient self-service portal, and third-party integrations (labs, payers, HIE) all funnel requests downward through a single secure entry point.
+**Internet Zone (top)**
+External users and patients send HTTPS traffic through the public internet cloud. From there, traffic splits into two paths — DDoS protection/filtering and load distribution — before entering AWS.
 
-**API gateway & security perimeter** — every inbound request passes through authentication (OAuth 2, MFA, RBAC), rate limiting, TLS-terminating routing, and immutable audit logging before touching any business logic.
 
-**Core application services** — the eight domain services (patient records, appointments, clinical docs, billing, notifications, prescriptions, interoperability, and reporting) communicate internally via a PHI-scoped async event bus to decouple workloads.
+**AWS Cloud Zone (middle)**
+This is the cloud-hosted application tier, split into three sections:
 
-**Data persistence** — a split storage strategy: an encrypted relational database for structured PHI/PII, a cache layer for sessions and hot reads, a document store for images and attachments, and geo-redundant backups for disaster recovery.
+- **Security Stack (left)** — Three layers of protection sit in front of everything: AWS Shield (DDoS mitigation), AWS WAF (web application firewall), and an Application Load Balancer. Traffic passes through two Firewall/Security Groups and an ALB before reaching the servers.
 
-**Security & compliance** — the foundational layer enforcing AES-256/TLS 1.3 encryption, least-privilege IAM, HIPAA/HITECH controls, and continuous vulnerability monitoring via SIEM and pen testing. A zero-trust perimeter and BAA enforcement span the entire stack.
+- **Public Subnet (center)** — Two Web/App Servers run in parallel behind Port 443. These handle live application requests and are intentionally separated from the database tier. They perform scheduled backups to the private subnet.
 
-The dashed arrows at the bottom show the bidirectional **FHIR/HL7 data flows** between Vault and external systems like labs and health information exchanges.
+- **Private Subnet (right)** — Isolated from direct internet access. Contains an AWS Backup Vault and Amazon S3 bucket that receive scheduled backups from both web servers. This is where backup data is safely stored.
+
+
+
+**On-Premises Hospital Zone (bottom)**
+Connected to AWS via a **Secure VPN Tunnel**, this is where sensitive PHI data actually lives:
+
+- **Data Tier** — A Primary PostgreSQL database server with a Secondary Failover server in active replication. Data is encrypted at rest. The secondary server also receives query/update traffic, likely for read scaling.
+
+- **Security & Audit** — An Audit Logging Server collects syslogs and logs from the database tier, while a SIEM Monitoring Server receives telemetry for real-time threat detection. Both systems manage the Hospital Endpoints.
+
+- **Hospital Endpoints** — Four classes of on-premises devices: Admin Workstations, Clinician Laptops, Nurses' Tablets, and Medical IoT Devices. All are managed through the security and audit layer.
+
+
+**Key design decisions visible here:**
+- PHI stays **on-premises** — the databases never leave the hospital network, which supports HIPAA compliance
+- The VPN tunnel ensures all cloud-to-on-prem communication is encrypted in transit
+- Redundancy is built in at every layer — two web servers, primary/failover databases, and geo-backed S3 storage
+- The SIEM + audit logging combination provides the continuous monitoring required for HIPAA/HITECH compliance
+
+
+
+
 
